@@ -8,6 +8,7 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
+use PHPStan\Reflection\ExtendedMethodReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -44,7 +45,7 @@ class SiteAttributeValidationRule implements Rule
 		}
 
 		$methodReflection = $scope->getMethodReflection($scope->getType($node->var), $node->name->toString());
-		if ($methodReflection === null || $methodReflection->getName() !== 'getAttribute') {
+		if (!$methodReflection instanceof ExtendedMethodReflection || $methodReflection->getName() !== 'getAttribute') {
 			return [];
 		}
 
@@ -69,7 +70,10 @@ class SiteAttributeValidationRule implements Rule
 			$argument->value->value,
 			$declaringClass->getDisplayName(),
 			$methodReflection->getName()
-		))->tip('You should add custom site attribute to the typo3.siteGetAttributeMapping setting.')->build();
+		))
+			->tip('You should add custom site attribute to the typo3.siteGetAttributeMapping setting.')
+			->identifier('phpstanTypo3.siteAttributeValidation')
+			->build();
 
 		return [$ruleError];
 	}

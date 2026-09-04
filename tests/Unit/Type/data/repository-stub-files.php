@@ -134,7 +134,7 @@ class FindAllTestRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
 	public function myTests(): void
 	{
 		assertType(
-			'array<int, RepositoryStubFiles\My\Test\Extension\Domain\Model\MyModel>',
+			'list<RepositoryStubFiles\My\Test\Extension\Domain\Model\MyModel>',
 			$this->findAll()
 		);
 	}
@@ -156,7 +156,7 @@ class FindAllWithoutReturnTestRepository extends \TYPO3\CMS\Extbase\Persistence\
 	public function myTests(): void
 	{
 		assertType(
-			'array<int, RepositoryStubFiles\My\Test\Extension\Domain\Model\MyModel>|TYPO3\CMS\Extbase\Persistence\QueryResultInterface<RepositoryStubFiles\My\Test\Extension\Domain\Model\MyModel>',
+			'list<RepositoryStubFiles\My\Test\Extension\Domain\Model\MyModel>|TYPO3\CMS\Extbase\Persistence\QueryResultInterface<RepositoryStubFiles\My\Test\Extension\Domain\Model\MyModel>',
 			$this->findAll()
 		);
 	}

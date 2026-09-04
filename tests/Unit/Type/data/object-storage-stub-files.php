@@ -25,7 +25,7 @@ class MyModel extends AbstractEntity
 		assertType('TYPO3\CMS\Extbase\Persistence\ObjectStorage<' . self::class . '>', $this->objectStorage);
 
 		foreach ($this->objectStorage as $key => $value) {
-			assertType('int', $key);
+			assertType('string', $key);
 			assertType(self::class, $value);
 		}
 

@@ -4,9 +4,9 @@ namespace SaschaEgerer\PhpstanTypo3\Rule;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
@@ -17,9 +17,6 @@ use PHPStan\Reflection\Php\PhpPropertyReflection;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
-use PHPStan\Type\Constant\ConstantArrayType;
-use PHPStan\Type\Constant\ConstantBooleanType;
-use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use SaschaEgerer\PhpstanTypo3\Rule\ValueObject\ValidatorOptionsConfiguration;
@@ -72,15 +69,17 @@ final class ValidatorResolverOptionsRule implements Rule
 		try {
 			$validatorClassName = $this->validatorClassNameResolver->resolve($validatorType);
 		} catch (\TYPO3\CMS\Extbase\Validation\Exception\NoSuchValidatorException $e) {
-			if ($validatorType instanceof ConstantStringType) {
-				$validatorClassName = $validatorType->getValue();
+			if ($validatorType->getConstantStrings() !== []) {
+				$validatorClassName = $validatorType->getConstantStrings()[0]->getValue();
 				$message = sprintf('Could not create validator for "%s"', $validatorClassName);
 			} else {
 				$message = 'Could not create validator';
 			}
 
 			return [
-				RuleErrorBuilder::message($message)->build(),
+				RuleErrorBuilder::message($message)
+					->identifier('phpstanTypo3.validatorResolverOptions.noSuchValidator')
+					->build(),
 			];
 		}
 
@@ -117,13 +116,17 @@ final class ValidatorResolverOptionsRule implements Rule
 		if ($neededRequiredOptions !== []) {
 			foreach ($neededRequiredOptions as $neededRequiredOption) {
 				$errorMessage = sprintf('Required validation option not set: %s', $neededRequiredOption);
-				$errors[] = RuleErrorBuilder::message($errorMessage)->build();
+				$errors[] = RuleErrorBuilder::message($errorMessage)
+					->identifier('phpstanTypo3.validatorResolverOptions.requiredValidatorOptionNotSet')
+					->build();
 			}
 		}
 
 		if ($unsupportedOptions !== []) {
 			$errorMessage = 'Unsupported validation option(s) found: ' . implode(', ', $unsupportedOptions);
-			$errors[] = RuleErrorBuilder::message($errorMessage)->build();
+			$errors[] = RuleErrorBuilder::message($errorMessage)
+				->identifier('phpstanTypo3.validatorResolverOptions.unsupportedValidationOption')
+				->build();
 		}
 
 		return $errors;
@@ -158,18 +161,16 @@ final class ValidatorResolverOptionsRule implements Rule
 
 		$validatorOptionsArgumentType = $scope->getType($validatorOptionsArgument->value);
 
-		if (!$validatorOptionsArgumentType instanceof ConstantArrayType) {
+		$constantArrays = $validatorOptionsArgumentType->getConstantArrays();
+
+		if ($constantArrays === []) {
 			return [];
 		}
 
-		$keysArray = $validatorOptionsArgumentType->getKeysArray();
-
-		foreach ($keysArray->getValueTypes() as $valueType) {
-			if (!($valueType instanceof ConstantStringType)) {
-				continue;
+		foreach ($constantArrays[0]->getKeyTypes() as $keyType) {
+			foreach ($keyType->getConstantStrings() as $constantString) {
+				$providedOptionsArray[] = $constantString->getValue();
 			}
-
-			$providedOptionsArray[] = $valueType->getValue();
 		}
 
 		return $providedOptionsArray;
@@ -195,10 +196,6 @@ final class ValidatorResolverOptionsRule implements Rule
 
 		foreach ($defaultValues->items as $defaultValue) {
 
-			if (!$defaultValue instanceof ArrayItem) {
-				continue;
-			}
-
 			if ($defaultValue->key === null) {
 				continue;
 			}
@@ -222,11 +219,7 @@ final class ValidatorResolverOptionsRule implements Rule
 
 			$requiredValueType = $scope->getType($optionDefinition->items[3]->value);
 
-			if (!$requiredValueType instanceof ConstantBooleanType) {
-				continue;
-			}
-
-			if (!$requiredValueType->getValue()) {
+			if (!$requiredValueType->isTrue()->yes()) {
 				continue;
 			}
 
@@ -256,20 +249,16 @@ final class ValidatorResolverOptionsRule implements Rule
 				}
 			);
 
-			if ($keyType instanceof ConstantStringType) {
-				return $keyType->getValue();
-			}
+			$constantStrings = $keyType->getConstantStrings();
 
-			return null;
+			return $constantStrings !== [] ? $constantStrings[0]->getValue() : null;
 		}
 
 		$keyType = $scope->getType($defaultValue->key);
 
-		if ($keyType instanceof ConstantStringType) {
-			return $keyType->getValue();
-		}
+		$constantStrings = $keyType->getConstantStrings();
 
-		return null;
+		return $constantStrings !== [] ? $constantStrings[0]->getValue() : null;
 	}
 
 }

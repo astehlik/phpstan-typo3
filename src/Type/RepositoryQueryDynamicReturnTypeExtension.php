@@ -10,7 +10,6 @@ use PHPStan\Type\ErrorType;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use PHPStan\Type\TypeWithClassName;
 use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
@@ -42,14 +41,14 @@ class RepositoryQueryDynamicReturnTypeExtension implements DynamicMethodReturnTy
 		if ($queryType instanceof GenericObjectType) {
 			$modelType = $queryType->getTypes();
 		} else {
-			$variableType = $scope->getType($methodCall->var);
+			$classNames = $scope->getType($methodCall->var)->getObjectClassNames();
 
-			if (!$variableType instanceof TypeWithClassName) {
+			if (count($classNames) !== 1) {
 				return new ErrorType();
 			}
 
 			/** @var class-string $className */
-			$className = $variableType->getClassName();
+			$className = $classNames[0];
 
 			$modelName = $this->translateRepositoryNameToModelName($className);
 

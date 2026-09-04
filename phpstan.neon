@@ -26,6 +26,22 @@ parameters:
             count: 1
             path: src/Rule/ValidatorResolverOptionsRule.php
         -
+            message: '#^Although PHPStan\\Reflection\\Php\\PhpPropertyReflection is covered by backward compatibility promise, this instanceof assumption might break because it''s not guaranteed to always stay the same\.$#'
+            identifier: phpstanApi.instanceofAssumption
+            count: 1
+            path: src/Rule/ValidatorResolverOptionsRule.php
+        # Reading the template arguments of a generic type has no non-deprecated equivalent
+        -
+            identifier: phpstanApi.instanceofType
+            paths:
+                - src/Type/QueryInterfaceDynamicReturnTypeExtension.php
+                - src/Type/QueryResultToArrayDynamicReturnTypeExtension.php
+                - src/Type/RepositoryFindAllDynamicReturnTypeExtension.php
+                - src/Type/RepositoryQueryDynamicReturnTypeExtension.php
+        -
+            identifier: phpstanApi.runtimeReflection
+            path: src/Helpers/Typo3ClassNamingUtilityTrait.php
+        -
             message: "#^Method SaschaEgerer\\\\PhpstanTypo3\\\\Tests\\\\Unit\\\\Type\\\\QueryResultToArrayDynamicReturnTypeExtension\\\\FrontendUserGroupCustomFindAllWithoutModelTypeRepository\\:\\:findAll\\(\\) return type with generic interface TYPO3\\\\CMS\\\\Extbase\\\\Persistence\\\\QueryResultInterface does not specify its types\\: ModelType$#"
             count: 1
             path: tests/Unit/Type/QueryResultToArrayDynamicReturnTypeExtension/data/query-result-to-array.php

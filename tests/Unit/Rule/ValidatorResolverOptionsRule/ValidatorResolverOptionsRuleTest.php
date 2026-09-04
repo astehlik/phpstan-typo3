@@ -4,6 +4,7 @@ namespace SaschaEgerer\PhpstanTypo3\Tests\Unit\Rule\ValidatorResolverOptionsRule
 
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use SaschaEgerer\PhpstanTypo3\Rule\ValidatorResolverOptionsRule;
 
 /**
@@ -13,10 +14,9 @@ final class ValidatorResolverOptionsRuleTest extends RuleTestCase
 {
 
 	/**
-	 * @dataProvider provideDataWithErrors
-	 *
 	 * @param list<array{0: string, 1: int, 2?: string}> $expectedErrorMessagesWithLines
 	 */
+	#[DataProvider('provideDataWithErrors')]
 	public function testRuleWithErrors(string $filePath, array $expectedErrorMessagesWithLines): void
 	{
 		$this->analyse([$filePath], $expectedErrorMessagesWithLines);

@@ -79,7 +79,7 @@ class RepositoryFindOneByMethodReflection implements MethodReflection
 	}
 
 	/**
-	 * @return RepositoryFindByParameterReflection[]
+	 * @return list<RepositoryFindByParameterReflection>
 	 */
 	public function getParameters(): array
 	{
@@ -103,7 +103,7 @@ class RepositoryFindOneByMethodReflection implements MethodReflection
 	}
 
 	/**
-	 * @return ParametersAcceptor[]
+	 * @return list<ParametersAcceptor>
 	 */
 	public function getVariants(): array
 	{

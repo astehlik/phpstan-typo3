@@ -6,13 +6,13 @@ TYPO3 CMS class reflection extension for PHPStan &amp; framework-specific rules.
 
 * [PHPStan](https://phpstan.org/)
 
+This branch supports TYPO3 12.4 with PHPStan 2.x and requires PHP 8.2 or higher.
+For TYPO3 13 and 14 use the `v2` and `main` branches, for PHPStan 1.x use the `v1` branch.
+
 This extension provides the following features (!!! not an exhaustive list !!!):
 
 **Dynamic Return Type Extensions**
 * Provides correct return type for `\TYPO3\CMS\Core\Context\Context->getAspect()`.
-* Provides correct return type for `\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance()`.
-* Provides correct return type for `\TYPO3\CMS\Extbase\Object\ObjectManagerInterface->get()`.
-* Provides correct return type for `\TYPO3\CMS\Extbase\Object\ObjectManager->get()`.
 * Provides correct return type for `\TYPO3\CMS\Extbase\Property\PropertyMapper->convert()`.
 * Provides correct return type for `\TYPO3\CMS\Core\Utility\MathUtility` methods like isIntegerInRange.
 * Provides correct return type for `\TYPO3\CMS\Extbase\Persistence\Generic\Query->execute()`.

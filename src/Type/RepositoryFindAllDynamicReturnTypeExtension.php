@@ -6,7 +6,6 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\PhpDoc\Tag\ExtendsTag;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ErrorType;
 use PHPStan\Type\Generic\GenericObjectType;
@@ -14,7 +13,6 @@ use PHPStan\Type\Generic\TemplateType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeTraverser;
-use PHPStan\Type\TypeWithClassName;
 use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
 use TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
@@ -44,9 +42,9 @@ class RepositoryFindAllDynamicReturnTypeExtension implements DynamicMethodReturn
 		Scope $scope
 	): Type
 	{
-		$variableType = $scope->getType($methodCall->var);
-		$methodReturnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
-		if (!$variableType instanceof TypeWithClassName) {
+		$classReflections = $scope->getType($methodCall->var)->getObjectClassReflections();
+		$methodReturnType = $methodReflection->getVariants()[0]->getReturnType();
+		if (count($classReflections) !== 1) {
 			return $methodReturnType;
 		}
 
@@ -63,7 +61,7 @@ class RepositoryFindAllDynamicReturnTypeExtension implements DynamicMethodReturn
 		}
 
 		/** @var class-string $className */
-		$className = $variableType->getClassName();
+		$className = $classReflections[0]->getName();
 
 		// if we have a custom findAll method...
 		if ($methodReflection->getDeclaringClass()->getName() !== Repository::class) {
@@ -71,11 +69,9 @@ class RepositoryFindAllDynamicReturnTypeExtension implements DynamicMethodReturn
 				return $methodReturnType;
 			}
 
-			if ($variableType->getClassReflection() !== null) {
-				$repositoryExtendsTags = $variableType->getClassReflection()->getExtendsTags()[Repository::class] ?? null;
-				if ($repositoryExtendsTags instanceof ExtendsTag && $repositoryExtendsTags->getType() instanceof GenericObjectType) {
-					return new GenericObjectType(QueryResultInterface::class, [$repositoryExtendsTags->getType()->getTypes()[0] ?? new ErrorType()]);
-				}
+			$repositoryExtendsTags = $classReflections[0]->getExtendsTags()[Repository::class] ?? null;
+			if ($repositoryExtendsTags instanceof ExtendsTag && $repositoryExtendsTags->getType() instanceof GenericObjectType) {
+				return new GenericObjectType(QueryResultInterface::class, [$repositoryExtendsTags->getType()->getTypes()[0] ?? new ErrorType()]);
 			}
 			/** @var class-string $className */
 			$className = $methodReflection->getDeclaringClass()->getName();

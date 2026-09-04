@@ -11,25 +11,19 @@
 	"minimum-stability": "dev",
 	"prefer-stable": true,
 	"require": {
-		"php": "^7.4 || ^8.0",
-		"phpstan/phpstan": "^1.10.9",
-		"typo3/cms-core": "^11.5 || ^12.4 || ^13.0",
-		"typo3/cms-extbase": "^11.5 || ^12.4 || ^13.0",
+		"php": "^8.2",
+		"ext-simplexml": "*",
+		"phpstan/phpstan": "^2.1",
+		"typo3/cms-core": "^12.4",
+		"typo3/cms-extbase": "^12.4",
 		"bnf/phpstan-psr-container": "^1.0",
-		"composer/semver": "^3.3",
-		"ssch/typo3-debug-dump-pass": "^0.0.2",
-		"ext-simplexml": "*"
+		"ssch/typo3-debug-dump-pass": "^0.0.2"
 	},
 	"require-dev": {
-		"nikic/php-parser": "^v4.19.1",
-		"consistence-community/coding-standard": "^3.10",
-		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
 		"php-parallel-lint/php-parallel-lint": "^1.4",
-		"phing/phing": "^2.17",
-		"phpstan/phpstan-strict-rules": "^1.5",
-		"phpunit/phpunit": "^9.6",
-		"symfony/polyfill-php80": "^1.29",
-		"phpstan/phpstan-phpunit": "^1.3"
+		"phpstan/phpstan-phpunit": "^2.0",
+		"phpstan/phpstan-strict-rules": "^2.0",
+		"phpunit/phpunit": "^11.5"
 	},
 	"autoload": {
 		"psr-4": {
@@ -54,9 +48,18 @@
 	},
 	"config": {
 		"allow-plugins": {
-			"dealerdirect/phpcodesniffer-composer-installer": true,
 			"typo3/class-alias-loader": true,
 			"typo3/cms-composer-installers": true
 		}
+	},
+	"scripts": {
+		"test": [
+			"@test:phpunit",
+			"@test:phpstan",
+			"@test:php-lint"
+		],
+		"test:phpunit": "phpunit --colors=always tests/",
+		"test:phpstan": "phpstan --memory-limit=2G",
+		"test:php-lint": "parallel-lint src tests"
 	}
 }

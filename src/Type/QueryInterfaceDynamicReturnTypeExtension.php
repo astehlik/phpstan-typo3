@@ -6,7 +6,6 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\ArrayType;
-use PHPStan\Type\Constant\ConstantBooleanType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ErrorType;
 use PHPStan\Type\Generic\GenericObjectType;
@@ -67,7 +66,7 @@ class QueryInterfaceDynamicReturnTypeExtension implements DynamicMethodReturnTyp
 		if ($argument !== null) {
 			$argType = $scope->getType($argument->value);
 
-			if ($classReflection !== null && $argType instanceof ConstantBooleanType && $argType->getValue() === true) {
+			if ($classReflection !== null && $argType->isTrue()->yes()) {
 				return new ArrayType(new IntegerType(), $modelType[0]);
 			}
 		}

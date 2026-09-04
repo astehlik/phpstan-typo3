@@ -12,42 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - typo3-version: "^11.5"
-            php-version: "7.4"
-            composer-flags: ""
-          - typo3-version: "^11.5"
-            php-version: "7.4"
-            composer-flags: " --prefer-lowest"
-          - typo3-version: "^11.5"
-            php-version: "8.0"
-            composer-flags: ""
-          - typo3-version: "^11.5"
-            php-version: "8.0"
-            composer-flags: " --prefer-lowest"
-          - typo3-version: "^11.5"
-            php-version: "8.1"
-            composer-flags: ""
-          - typo3-version: "^11.5"
-            php-version: "8.1"
-            composer-flags: " --prefer-lowest"
-          - typo3-version: "^11.5"
-            php-version: "8.2"
-            composer-flags: ""
-          - typo3-version: "^11.5"
-            php-version: "8.2"
-            composer-flags: " --prefer-lowest"
-          - typo3-version: "^11.5"
-            php-version: "8.3"
-            composer-flags: ""
-          - typo3-version: "^11.5"
-            php-version: "8.3"
-            composer-flags: " --prefer-lowest"
-          - typo3-version: "^12.4"
-            php-version: "8.1"
-            composer-flags: ""
-          - typo3-version: "^12.4"
-            php-version: "8.1"
-            composer-flags: " --prefer-lowest"
           - typo3-version: "^12.4"
             php-version: "8.2"
             composer-flags: ""
@@ -60,22 +24,16 @@ jobs:
           - typo3-version: "^12.4"
             php-version: "8.3"
             composer-flags: " --prefer-lowest"
-          - typo3-version: "^13.1"
-            php-version: "8.2"
+          - typo3-version: "^12.4"
+            php-version: "8.4"
             composer-flags: ""
-          - typo3-version: "^13.1"
-            php-version: "8.2"
-            composer-flags: " --prefer-lowest"
-          - typo3-version: "^13.1"
-            php-version: "8.3"
-            composer-flags: ""
-          - typo3-version: "^13.1"
-            php-version: "8.3"
+          - typo3-version: "^12.4"
+            php-version: "8.4"
             composer-flags: " --prefer-lowest"
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: "Install PHP"
         uses: "shivammathur/setup-php@v2"
@@ -86,6 +44,14 @@ jobs:
       - name: "Install specific TYPO3 version"
         run: "composer update --no-interaction --no-progress --with typo3/cms-core:${{ matrix.typo3-version }} ${{ matrix.composer-flags }}"
 
-      - name: "Tests"
+      - name: "Run PHP lint"
         run: |
-          vendor/bin/phing
+          composer test:php-lint
+
+      - name: "Run phpstan"
+        run: |
+          composer test:phpstan
+
+      - name: "Run phpunit"
+        run: |
+          composer test:phpunit

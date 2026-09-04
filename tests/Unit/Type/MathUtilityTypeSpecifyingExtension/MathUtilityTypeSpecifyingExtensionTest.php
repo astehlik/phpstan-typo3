@@ -3,6 +3,7 @@
 namespace SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\MathUtilityTypeSpecifyingExtension;
 
 use PHPStan\Testing\TypeInferenceTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 final class MathUtilityTypeSpecifyingExtensionTest extends TypeInferenceTestCase
 {
@@ -12,15 +13,15 @@ final class MathUtilityTypeSpecifyingExtensionTest extends TypeInferenceTestCase
 	 */
 	public static function dataFileAsserts(): iterable
 	{
-		yield from self::gatherAssertTypes(__DIR__ . '/data/MathUtilityTest.php');
+		yield from self::gatherAssertTypes(__DIR__ . '/data/MathUtilityType.php');
 	}
 
 	/**
-	 * @dataProvider dataFileAsserts
 	 * @param string $assertType
 	 * @param string $file
 	 * @param mixed ...$args
 	 */
+	#[DataProvider('dataFileAsserts')]
 	public function testFileAsserts(
 		string $assertType,
 		string $file,

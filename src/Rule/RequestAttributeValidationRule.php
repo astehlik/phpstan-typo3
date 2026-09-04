@@ -8,6 +8,7 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
+use PHPStan\Reflection\ExtendedMethodReflection;
 use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 use Psr\Http\Message\ServerRequestInterface;
@@ -44,7 +45,7 @@ class RequestAttributeValidationRule implements Rule
 		}
 
 		$methodReflection = $scope->getMethodReflection($scope->getType($node->var), $node->name->toString());
-		if ($methodReflection === null || $methodReflection->getName() !== 'getAttribute') {
+		if (!$methodReflection instanceof ExtendedMethodReflection || $methodReflection->getName() !== 'getAttribute') {
 			return [];
 		}
 
@@ -72,7 +73,10 @@ class RequestAttributeValidationRule implements Rule
 			$argument->value->value,
 			$declaringClass->getDisplayName(),
 			$methodReflection->getName()
-		))->tip('You should add custom request attribute to the typo3.requestGetAttributeMapping setting.')->build();
+		))
+			->tip('You should add custom request attribute to the typo3.requestGetAttributeMapping setting.')
+			->identifier('phpstanTypo3.requestAttributeValidation')
+			->build();
 
 		return [$ruleError];
 	}

@@ -5,7 +5,6 @@ namespace SaschaEgerer\PhpstanTypo3\Type;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -36,14 +35,15 @@ class RepositoryDynamicReturnTypeExtension implements DynamicMethodReturnTypeExt
 		Scope $scope
 	): Type
 	{
-		$variableType = $scope->getType($methodCall->var);
+		$classReflections = $scope->getType($methodCall->var)->getObjectClassReflections();
 
-		if (!($variableType instanceof ObjectType)
-			|| !is_subclass_of($variableType->getClassName(), $this->getClass())) {
-			return ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
+		if (count($classReflections) !== 1
+			|| $classReflections[0]->getName() === RepositoryInterface::class
+			|| !$classReflections[0]->implementsInterface(RepositoryInterface::class)) {
+			return $methodReflection->getVariants()[0]->getReturnType();
 		}
 
-		$modelName = $this->translateRepositoryNameToModelName($variableType->getClassName());
+		$modelName = $this->translateRepositoryNameToModelName($classReflections[0]->getName());
 
 		return TypeCombinator::addNull(new ObjectType($modelName));
 	}
