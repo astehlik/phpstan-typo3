@@ -39,9 +39,6 @@ parameters:
                 - src/Type/RepositoryFindAllDynamicReturnTypeExtension.php
                 - src/Type/RepositoryQueryDynamicReturnTypeExtension.php
         -
-            identifier: phpstanApi.runtimeReflection
-            path: src/Helpers/Typo3ClassNamingUtilityTrait.php
-        -
             message: "#^Method SaschaEgerer\\\\PhpstanTypo3\\\\Tests\\\\Unit\\\\Type\\\\QueryResultToArrayDynamicReturnTypeExtension\\\\FrontendUserGroupCustomFindAllWithoutModelTypeRepository\\:\\:findAll\\(\\) return type with generic interface TYPO3\\\\CMS\\\\Extbase\\\\Persistence\\\\QueryResultInterface does not specify its types\\: ModelType$#"
             count: 1
             path: tests/Unit/Type/QueryResultToArrayDynamicReturnTypeExtension/data/query-result-to-array.php

@@ -9,13 +9,15 @@ use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
+use SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 
 class RepositoryDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
 
-	use Typo3ClassNamingUtilityTrait;
+	public function __construct(private readonly RepositoryModelResolver $repositoryModelResolver)
+	{
+	}
 
 	public function getClass(): string
 	{
@@ -33,19 +35,19 @@ class RepositoryDynamicReturnTypeExtension implements DynamicMethodReturnTypeExt
 		MethodReflection $methodReflection,
 		MethodCall $methodCall,
 		Scope $scope
-	): Type
+	): ?Type
 	{
 		$classReflections = $scope->getType($methodCall->var)->getObjectClassReflections();
-
-		if (count($classReflections) !== 1
-			|| $classReflections[0]->getName() === RepositoryInterface::class
-			|| !$classReflections[0]->implementsInterface(RepositoryInterface::class)) {
-			return $methodReflection->getVariants()[0]->getReturnType();
+		if (count($classReflections) !== 1) {
+			return null;
 		}
 
-		$modelName = $this->translateRepositoryNameToModelName($classReflections[0]->getName());
+		$modelClass = $this->repositoryModelResolver->resolve($classReflections[0]);
+		if ($modelClass === null) {
+			return null;
+		}
 
-		return TypeCombinator::addNull(new ObjectType($modelName));
+		return TypeCombinator::addNull(new ObjectType($modelClass->getName()));
 	}
 
 }

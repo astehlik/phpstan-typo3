@@ -73,6 +73,10 @@ services:
     -
         class: SaschaEgerer\PhpstanTypo3\Service\ValidatorClassNameResolver
     -
+        class: SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver
+        arguments:
+            parser: @currentPhpVersionSimpleDirectParser
+    -
         class: SaschaEgerer\PhpstanTypo3\Type\PropertyMapperReturnTypeExtension
         tags:
             - phpstan.broker.dynamicMethodReturnTypeExtension

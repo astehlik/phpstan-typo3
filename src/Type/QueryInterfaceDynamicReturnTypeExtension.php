@@ -13,7 +13,7 @@ use PHPStan\Type\IntegerType;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
+use SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver;
 use TYPO3\CMS\Extbase\Persistence\Generic\QueryResult;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
@@ -21,7 +21,9 @@ use TYPO3\CMS\Extbase\Persistence\Repository;
 class QueryInterfaceDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
 
-	use Typo3ClassNamingUtilityTrait;
+	public function __construct(private readonly RepositoryModelResolver $repositoryModelResolver)
+	{
+	}
 
 	public function getClass(): string
 	{
@@ -54,12 +56,11 @@ class QueryInterfaceDynamicReturnTypeExtension implements DynamicMethodReturnTyp
 			}
 			$modelType = [new MixedType()];
 
-			if ($classReflection->isSubclassOf(Repository::class)) {
-				$modelName = $this->translateRepositoryNameToModelName(
-					$classReflection->getName()
-				);
-
-				$modelType = [new ObjectType($modelName)];
+			$modelClass = $classReflection->isSubclassOf(Repository::class)
+				? $this->repositoryModelResolver->resolve($classReflection)
+				: null;
+			if ($modelClass !== null) {
+				$modelType = [new ObjectType($modelClass->getName())];
 			}
 		}
 

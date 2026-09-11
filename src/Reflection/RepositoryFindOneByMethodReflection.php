@@ -7,30 +7,22 @@ use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\FunctionVariant;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptor;
-use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\TrinaryLogic;
 use PHPStan\Type\Generic\TemplateTypeMap;
+use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
-use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
 
 class RepositoryFindOneByMethodReflection implements MethodReflection
 {
 
-	use Typo3ClassNamingUtilityTrait;
-
-	private ClassReflection $classReflection;
-
-	private string $name;
-
-	private ReflectionProvider $reflectionProvider;
-
-	public function __construct(ClassReflection $classReflection, string $name, ReflectionProvider $reflectionProvider)
+	public function __construct(
+		private readonly ClassReflection $classReflection,
+		private readonly string $name,
+		private readonly ClassReflection $modelReflection
+	)
 	{
-		$this->classReflection = $classReflection;
-		$this->name = $name;
-		$this->reflectionProvider = $reflectionProvider;
 	}
 
 	public function getDeclaringClass(): ClassReflection
@@ -69,23 +61,15 @@ class RepositoryFindOneByMethodReflection implements MethodReflection
 	}
 
 	/**
-	 * @return class-string
-	 */
-	private function getModelName(): string
-	{
-		$className = $this->classReflection->getName();
-
-		return $this->translateRepositoryNameToModelName($className);
-	}
-
-	/**
 	 * @return list<RepositoryFindByParameterReflection>
 	 */
 	public function getParameters(): array
 	{
-		$modelReflection = $this->reflectionProvider->getClass($this->getModelName());
-
-		$type = $modelReflection->getNativeProperty($this->getPropertyName())->getReadableType();
+		if ($this->modelReflection->hasNativeProperty($this->getPropertyName())) {
+			$type = $this->modelReflection->getNativeProperty($this->getPropertyName())->getReadableType();
+		} else {
+			$type = new MixedType(\false);
+		}
 
 		return [
 			new RepositoryFindByParameterReflection('arg', $type),
@@ -99,7 +83,7 @@ class RepositoryFindOneByMethodReflection implements MethodReflection
 
 	public function getReturnType(): Type
 	{
-		return TypeCombinator::addNull(new ObjectType($this->getModelName()));
+		return TypeCombinator::addNull(new ObjectType($this->modelReflection->getName()));
 	}
 
 	/**

@@ -13,7 +13,7 @@ use PHPStan\Type\Generic\TemplateType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeTraverser;
-use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
+use SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver;
 use TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
@@ -22,7 +22,9 @@ use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 class RepositoryFindAllDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
 
-	use Typo3ClassNamingUtilityTrait;
+	public function __construct(private readonly RepositoryModelResolver $repositoryModelResolver)
+	{
+	}
 
 	public function getClass(): string
 	{
@@ -60,8 +62,7 @@ class RepositoryFindAllDynamicReturnTypeExtension implements DynamicMethodReturn
 			return $methodReturnTypeGeneric;
 		}
 
-		/** @var class-string $className */
-		$className = $classReflections[0]->getName();
+		$repositoryClass = $classReflections[0];
 
 		// if we have a custom findAll method...
 		if ($methodReflection->getDeclaringClass()->getName() !== Repository::class) {
@@ -73,13 +74,15 @@ class RepositoryFindAllDynamicReturnTypeExtension implements DynamicMethodReturn
 			if ($repositoryExtendsTags instanceof ExtendsTag && $repositoryExtendsTags->getType() instanceof GenericObjectType) {
 				return new GenericObjectType(QueryResultInterface::class, [$repositoryExtendsTags->getType()->getTypes()[0] ?? new ErrorType()]);
 			}
-			/** @var class-string $className */
-			$className = $methodReflection->getDeclaringClass()->getName();
+			$repositoryClass = $methodReflection->getDeclaringClass();
 		}
 
-		$modelName = $this->translateRepositoryNameToModelName($className);
+		$modelClass = $this->repositoryModelResolver->resolve($repositoryClass);
+		if ($modelClass === null) {
+			return $methodReturnType;
+		}
 
-		return new GenericObjectType(QueryResultInterface::class, [new ObjectType($modelName)]);
+		return new GenericObjectType(QueryResultInterface::class, [new ObjectType($modelClass->getName())]);
 	}
 
 	/**

@@ -14,13 +14,10 @@ use PHPStan\Type\IntegerType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeTraverser;
-use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 
 class QueryResultToArrayDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
-
-	use Typo3ClassNamingUtilityTrait;
 
 	public function getClass(): string
 	{

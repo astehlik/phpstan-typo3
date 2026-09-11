@@ -22,6 +22,11 @@ class ExtendingMyAbstractModel extends  \TYPO3\CMS\Extbase\DomainObject\Abstract
 
 }
 
+class MyModelWithoutExtends extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
+{
+
+}
+
 namespace RepositoryStubFiles\My\Test\Extension\Domain\Repository;
 
 use function PHPStan\Testing\assertType;
@@ -104,12 +109,6 @@ class ExtendingMyAbstractModelRepository extends MyAbstractModelRepository
 			$this->countByNonexisting('a')
 		);
 	}
-
-}
-
-
-class MyModelWithoutExtends extends \TYPO3\CMS\Extbase\DomainObject\AbstractEntity
-{
 
 }
 

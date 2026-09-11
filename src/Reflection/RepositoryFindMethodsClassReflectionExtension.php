@@ -5,22 +5,15 @@ namespace SaschaEgerer\PhpstanTypo3\Reflection;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\MethodsClassReflectionExtension;
-use PHPStan\Reflection\ReflectionProvider;
-use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
+use PHPStan\ShouldNotHappenException;
+use SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
 class RepositoryFindMethodsClassReflectionExtension implements MethodsClassReflectionExtension
 {
 
-	use Typo3ClassNamingUtilityTrait;
-
-	private ReflectionProvider $reflectionProvider;
-
-	public function __construct(
-		ReflectionProvider $reflectionProvider
-	)
+	public function __construct(private readonly RepositoryModelResolver $repositoryModelResolver)
 	{
-		$this->reflectionProvider = $reflectionProvider;
 	}
 
 	public function hasMethod(ClassReflection $classReflection, string $methodName): bool
@@ -48,24 +41,23 @@ class RepositoryFindMethodsClassReflectionExtension implements MethodsClassRefle
 		// ensure that a property with that name exists on the model, as there might
 		// be methods starting with find[One]By... with custom implementations on
 		// inherited repositories
-		$className = $classReflection->getName();
-		$modelName = $this->translateRepositoryNameToModelName($className);
+		$modelReflection = $this->repositoryModelResolver->resolve($classReflection);
 
-		$modelReflection = $this->reflectionProvider->getClass($modelName);
-		return $modelReflection->hasProperty($propertyName);
+		return $modelReflection !== null && $modelReflection->hasProperty($propertyName);
 	}
 
 	public function getMethod(ClassReflection $classReflection, string $methodName): MethodReflection
 	{
-		if (strpos($methodName, 'findOneBy') === 0) {
-			$methodReflection
-				= new RepositoryFindOneByMethodReflection($classReflection, $methodName, $this->reflectionProvider);
-		} else {
-			$methodReflection
-				= new RepositoryFindByMethodReflection($classReflection, $methodName, $this->reflectionProvider);
+		$modelReflection = $this->repositoryModelResolver->resolve($classReflection);
+		if ($modelReflection === null) {
+			throw new ShouldNotHappenException();
 		}
 
-		return $methodReflection;
+		if (strpos($methodName, 'findOneBy') === 0) {
+			return new RepositoryFindOneByMethodReflection($classReflection, $methodName, $modelReflection);
+		}
+
+		return new RepositoryFindByMethodReflection($classReflection, $methodName, $modelReflection);
 	}
 
 }

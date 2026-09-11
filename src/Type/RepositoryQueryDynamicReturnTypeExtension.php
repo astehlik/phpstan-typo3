@@ -6,18 +6,19 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
-use PHPStan\Type\ErrorType;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use SaschaEgerer\PhpstanTypo3\Helpers\Typo3ClassNamingUtilityTrait;
+use SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
 use TYPO3\CMS\Extbase\Persistence\RepositoryInterface;
 
 class RepositoryQueryDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
 
-	use Typo3ClassNamingUtilityTrait;
+	public function __construct(private readonly RepositoryModelResolver $repositoryModelResolver)
+	{
+	}
 
 	public function getClass(): string
 	{
@@ -35,33 +36,19 @@ class RepositoryQueryDynamicReturnTypeExtension implements DynamicMethodReturnTy
 		MethodReflection $methodReflection,
 		MethodCall $methodCall,
 		Scope $scope
-	): Type
+	): ?Type
 	{
-		$queryType = $scope->getType($methodCall->var);
-		if ($queryType instanceof GenericObjectType) {
-			$modelType = $queryType->getTypes();
-		} else {
-			$classReflections = $queryType->getObjectClassReflections();
-
-			if (count($classReflections) !== 1) {
-				return new ErrorType();
-			}
-
-			// A generic repository (e.g. an abstract base with @template) has no model class to derive
-			// from its name; the declared return type already carries the template type.
-			if ($classReflections[0]->isGeneric()) {
-				return $methodReflection->getVariants()[0]->getReturnType();
-			}
-
-			/** @var class-string $className */
-			$className = $classReflections[0]->getName();
-
-			$modelName = $this->translateRepositoryNameToModelName($className);
-
-			$modelType = [new ObjectType($modelName)];
+		$classReflections = $scope->getType($methodCall->var)->getObjectClassReflections();
+		if (count($classReflections) !== 1) {
+			return null;
 		}
 
-		return new GenericObjectType(QueryInterface::class, $modelType);
+		$modelClass = $this->repositoryModelResolver->resolve($classReflections[0]);
+		if ($modelClass === null) {
+			return null;
+		}
+
+		return new GenericObjectType(QueryInterface::class, [new ObjectType($modelClass->getName())]);
 	}
 
 }
