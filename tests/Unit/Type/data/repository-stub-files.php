@@ -171,3 +171,20 @@ class FindAllWithoutReturnTestRepository extends \TYPO3\CMS\Extbase\Persistence\
 	}
 
 }
+
+/**
+ * @template T of \TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface
+ * @extends \TYPO3\CMS\Extbase\Persistence\Repository<T>
+ */
+abstract class MyGenericRepository extends \TYPO3\CMS\Extbase\Persistence\Repository
+{
+
+	public function myTests(): void
+	{
+		assertType(
+			'TYPO3\CMS\Extbase\Persistence\QueryInterface<T of TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface (class RepositoryStubFiles\My\Test\Extension\Domain\Repository\MyGenericRepository, argument)>',
+			$this->createQuery()
+		);
+	}
+
+}

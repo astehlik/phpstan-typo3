@@ -41,14 +41,20 @@ class RepositoryQueryDynamicReturnTypeExtension implements DynamicMethodReturnTy
 		if ($queryType instanceof GenericObjectType) {
 			$modelType = $queryType->getTypes();
 		} else {
-			$classNames = $scope->getType($methodCall->var)->getObjectClassNames();
+			$classReflections = $queryType->getObjectClassReflections();
 
-			if (count($classNames) !== 1) {
+			if (count($classReflections) !== 1) {
 				return new ErrorType();
 			}
 
+			// A generic repository (e.g. an abstract base with @template) has no model class to derive
+			// from its name; the declared return type already carries the template type.
+			if ($classReflections[0]->isGeneric()) {
+				return $methodReflection->getVariants()[0]->getReturnType();
+			}
+
 			/** @var class-string $className */
-			$className = $classNames[0];
+			$className = $classReflections[0]->getName();
 
 			$modelName = $this->translateRepositoryNameToModelName($className);
 
