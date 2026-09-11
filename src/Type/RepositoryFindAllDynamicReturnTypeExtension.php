@@ -4,15 +4,12 @@ namespace SaschaEgerer\PhpstanTypo3\Type;
 
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
-use PHPStan\PhpDoc\Tag\ExtendsTag;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
-use PHPStan\Type\ErrorType;
 use PHPStan\Type\Generic\GenericObjectType;
-use PHPStan\Type\Generic\TemplateType;
+use PHPStan\Type\IntegerType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use PHPStan\Type\TypeTraverser;
 use SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver;
 use TYPO3\CMS\Extbase\DomainObject\DomainObjectInterface;
 use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
@@ -42,75 +39,37 @@ class RepositoryFindAllDynamicReturnTypeExtension implements DynamicMethodReturn
 		MethodReflection $methodReflection,
 		MethodCall $methodCall,
 		Scope $scope
-	): Type
+	): ?Type
 	{
 		$classReflections = $scope->getType($methodCall->var)->getObjectClassReflections();
-		$methodReturnType = $methodReflection->getVariants()[0]->getReturnType();
 		if (count($classReflections) !== 1) {
-			return $methodReturnType;
+			return null;
 		}
 
-		$methodReturnTypeGeneric = $this->getGenericTypes($methodReturnType)[0] ?? null;
-		if (
-			$methodReturnTypeGeneric instanceof GenericObjectType &&
-			($methodReturnTypeGeneric->getTypes()[0] ?? null) instanceof ObjectType &&
-			$methodReturnTypeGeneric->getTypes()[0]->getClassName() !== DomainObjectInterface::class
-		) {
-			if ($methodReflection->getDeclaringClass()->getName() !== Repository::class) {
-				return $methodReturnType;
-			}
-			return $methodReturnTypeGeneric;
+		$methodReturnType = $methodReflection->getVariants()[0]->getReturnType();
+		$isDefaultFindAll = $methodReflection->getDeclaringClass()->getName() === Repository::class;
+		if (!$isDefaultFindAll && !(new ObjectType(QueryResultInterface::class))->isSuperTypeOf($methodReturnType)->yes()) {
+			return null;
 		}
 
-		$repositoryClass = $classReflections[0];
-
-		// if we have a custom findAll method...
-		if ($methodReflection->getDeclaringClass()->getName() !== Repository::class) {
-			if ($methodReturnType->getIterableValueType() instanceof ObjectType) {
-				return $methodReturnType;
-			}
-
-			$repositoryExtendsTags = $classReflections[0]->getExtendsTags()[Repository::class] ?? null;
-			if ($repositoryExtendsTags instanceof ExtendsTag && $repositoryExtendsTags->getType() instanceof GenericObjectType) {
-				return new GenericObjectType(QueryResultInterface::class, [$repositoryExtendsTags->getType()->getTypes()[0] ?? new ErrorType()]);
-			}
-			$repositoryClass = $methodReflection->getDeclaringClass();
+		$modelType = $methodReturnType->getIterableValueType();
+		if ($modelType instanceof ObjectType && $modelType->getClassName() !== DomainObjectInterface::class) {
+			// The declared type already knows the model, e.g. via @extends Repository<Model>.
+			// The default implementation never returns the raw array variant, so narrow it.
+			return $isDefaultFindAll ? $this->createQueryResultType($modelType) : null;
 		}
 
-		$modelClass = $this->repositoryModelResolver->resolve($repositoryClass);
+		$modelClass = $this->repositoryModelResolver->resolve($classReflections[0]);
 		if ($modelClass === null) {
-			return $methodReturnType;
+			return null;
 		}
 
-		return new GenericObjectType(QueryResultInterface::class, [new ObjectType($modelClass->getName())]);
+		return $this->createQueryResultType(new ObjectType($modelClass->getName()));
 	}
 
-	/**
-	 * @return GenericObjectType[]
-	 */
-	private function getGenericTypes(Type $baseType): array
+	private function createQueryResultType(Type $modelType): Type
 	{
-		$genericObjectTypes = [];
-		TypeTraverser::map($baseType, static function (Type $type, callable $traverse) use (&$genericObjectTypes): Type {
-			if ($type instanceof GenericObjectType) {
-				$resolvedType =	TypeTraverser::map($type, static function (Type $type, callable $traverse): Type {
-					if ($type instanceof TemplateType) {
-						return $traverse($type->getBound());
-					}
-					return $traverse($type);
-				});
-				if (!$resolvedType instanceof GenericObjectType) {
-					throw new \PHPStan\ShouldNotHappenException();
-				}
-				$genericObjectTypes[] = $resolvedType;
-				$traverse($type);
-				return $type;
-			}
-			$traverse($type);
-			return $type;
-		});
-
-		return $genericObjectTypes;
+		return new GenericObjectType(QueryResultInterface::class, [new IntegerType(), $modelType]);
 	}
 
 }

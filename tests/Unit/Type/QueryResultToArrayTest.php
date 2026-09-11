@@ -1,11 +1,11 @@
 <?php declare(strict_types = 1);
 
-namespace SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\QueryResultToArrayDynamicReturnTypeExtension;
+namespace SaschaEgerer\PhpstanTypo3\Tests\Unit\Type;
 
 use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-final class QueryResultToArrayDynamicReturnTypeExtensionTest extends TypeInferenceTestCase
+final class QueryResultToArrayTest extends TypeInferenceTestCase
 {
 
 	/**
@@ -33,7 +33,7 @@ final class QueryResultToArrayDynamicReturnTypeExtensionTest extends TypeInferen
 
 	public static function getAdditionalConfigFiles(): array
 	{
-		return [__DIR__ . '/../../../../extension.neon'];
+		return [__DIR__ . '/../../../extension.neon'];
 	}
 
 }

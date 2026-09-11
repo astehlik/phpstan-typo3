@@ -2,29 +2,11 @@
 namespace TYPO3\CMS\Extbase\Persistence;
 
 /**
- * @template ModelType
+ * @template T of object
  */
 interface QueryInterface
 {
-    // We have to define the constants here to be able to use them in other stubs.
-    // See https://phpstan.org/user-guide/stub-files
+    // Referenced from other stubs; the stub validator only sees classes declared in stubs.
     public const ORDER_ASCENDING = 'ASC';
     public const ORDER_DESCENDING = 'DESC';
-    
-    /**
-     * @param bool $returnRawQueryResult
-     * @return \TYPO3\CMS\Extbase\Persistence\QueryResultInterface<ModelType>|list<array<string, mixed>>
-     */
-    public function execute($returnRawQueryResult = false);
-
-    /**
-     * @param mixed $constraint
-     * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface<ModelType>
-     */
-    public function matching($constraint);
-
-    /**
-     * @return class-string<ModelType>
-     */
-    public function getType();
 }

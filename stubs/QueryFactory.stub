@@ -4,7 +4,7 @@ namespace TYPO3\CMS\Extbase\Persistence\Generic;
 class QueryFactory
 {
     /**
-     * @template TEntityClass
+     * @template TEntityClass of object
      * @param class-string<TEntityClass> $className The class name
      * @return \TYPO3\CMS\Extbase\Persistence\QueryInterface<TEntityClass>
      */

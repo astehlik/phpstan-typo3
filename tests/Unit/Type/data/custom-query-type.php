@@ -39,11 +39,34 @@ class MyModelRepository extends Repository
 			$query
 		);
 
+		assertType(
+			'TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, CustomQueryType\My\Test\Extension\Domain\Model\SomeOtherModel>',
+			$result
+		);
+
 		$rawResult = $query->execute(true);
-		assertType('array<int, CustomQueryType\My\Test\Extension\Domain\Model\SomeOtherModel>', $rawResult);
+		assertType('list<array<string, mixed>>', $rawResult);
 
 		$array = $result->toArray();
-		assertType('array<int, CustomQueryType\My\Test\Extension\Domain\Model\SomeOtherModel>', $array);
+		assertType('list<CustomQueryType\My\Test\Extension\Domain\Model\SomeOtherModel>', $array);
+
+		assertType('CustomQueryType\My\Test\Extension\Domain\Model\SomeOtherModel|null', $result->getFirst());
+		foreach ($result as $key => $model) {
+			assertType('int', $key);
+			assertType('CustomQueryType\My\Test\Extension\Domain\Model\SomeOtherModel', $model);
+		}
+	}
+
+	public function executeUntypedQuery(): void
+	{
+		/** @var QueryInterface $query */
+		$query = $this->createQuery();
+
+		assertType(
+			'TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, CustomQueryType\My\Test\Extension\Domain\Model\SomeOtherModel>',
+			$query->execute()
+		);
+		assertType('list<array<string, mixed>>', $query->execute(true));
 	}
 
 }

@@ -5,19 +5,20 @@ namespace SaschaEgerer\PhpstanTypo3\Type;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Type\ArrayType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
-use PHPStan\Type\ErrorType;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\IntegerType;
-use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use SaschaEgerer\PhpstanTypo3\Service\RepositoryModelResolver;
-use TYPO3\CMS\Extbase\Persistence\Generic\QueryResult;
 use TYPO3\CMS\Extbase\Persistence\QueryInterface;
+use TYPO3\CMS\Extbase\Persistence\QueryResultInterface;
 use TYPO3\CMS\Extbase\Persistence\Repository;
 
+/**
+ * A query without a type argument that is executed inside a repository targets the model of that repository.
+ * Queries with a type argument are covered by the declared return type of execute().
+ */
 class QueryInterfaceDynamicReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
 
@@ -41,38 +42,28 @@ class QueryInterfaceDynamicReturnTypeExtension implements DynamicMethodReturnTyp
 		MethodReflection $methodReflection,
 		MethodCall $methodCall,
 		Scope $scope
-	): Type
+	): ?Type
 	{
+		if ($scope->getType($methodCall->var) instanceof GenericObjectType) {
+			return null;
+		}
+
 		$argument = $methodCall->getArgs()[0] ?? null;
+		if ($argument !== null && !$scope->getType($argument->value)->isFalse()->yes()) {
+			return null;
+		}
 
 		$classReflection = $scope->getClassReflection();
-
-		$queryType = $scope->getType($methodCall->var);
-		if ($queryType instanceof GenericObjectType) {
-			$modelType = $queryType->getTypes();
-		} else {
-			if ($classReflection === null) {
-				return new ErrorType();
-			}
-			$modelType = [new MixedType()];
-
-			$modelClass = $classReflection->isSubclassOf(Repository::class)
-				? $this->repositoryModelResolver->resolve($classReflection)
-				: null;
-			if ($modelClass !== null) {
-				$modelType = [new ObjectType($modelClass->getName())];
-			}
+		if ($classReflection === null || $classReflection->getAncestorWithClassName(Repository::class) === null) {
+			return null;
 		}
 
-		if ($argument !== null) {
-			$argType = $scope->getType($argument->value);
-
-			if ($classReflection !== null && $argType->isTrue()->yes()) {
-				return new ArrayType(new IntegerType(), $modelType[0]);
-			}
+		$modelClass = $this->repositoryModelResolver->resolve($classReflection);
+		if ($modelClass === null) {
+			return null;
 		}
 
-		return new GenericObjectType(QueryResult::class, $modelType);
+		return new GenericObjectType(QueryResultInterface::class, [new IntegerType(), new ObjectType($modelClass->getName())]);
 	}
 
 }

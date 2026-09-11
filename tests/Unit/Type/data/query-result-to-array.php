@@ -3,7 +3,7 @@
 // phpcs:disable Squiz.Classes.ClassFileName.NoMatch
 // phpcs:disable PSR1.Classes.ClassDeclaration.MultipleClasses
 
-namespace SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\QueryResultToArrayDynamicReturnTypeExtension;
+namespace QueryResultToArray;
 
 use TYPO3\CMS\Extbase\DomainObject\AbstractEntity;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
@@ -27,7 +27,7 @@ class FrontendUserGroupCustomFindAllRepository extends Repository
 {
 
 	/**
-	 * @return QueryResultInterface<FrontendUserGroup>
+	 * @return QueryResultInterface<int, FrontendUserGroup>
 	 */
 	public function findAll(): QueryResultInterface // phpcs:ignore SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingAnyTypeHint
 	{
@@ -104,28 +104,28 @@ class MyController extends ActionController
 	public function showAction(): void
 	{
 		assertType(
-			'array<int, SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\QueryResultToArrayDynamicReturnTypeExtension\FrontendUserGroup>',
+			'list<QueryResultToArray\FrontendUserGroup>',
 			$this->myRepository->findAll()->toArray()
 		);
 
 		$queryResult = $this->myRepository->findAll();
 		$myObjects = $queryResult->toArray();
 		assertType(
-			'array<int, SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\QueryResultToArrayDynamicReturnTypeExtension\FrontendUserGroup>',
+			'list<QueryResultToArray\FrontendUserGroup>',
 			$myObjects
 		);
 
 		$queryResult = $this->myCustomFindAllRepository->findAll();
 		$myObjects = $queryResult->toArray();
 		assertType(
-			'array<int, SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\QueryResultToArrayDynamicReturnTypeExtension\FrontendUserGroup>',
+			'list<QueryResultToArray\FrontendUserGroup>',
 			$myObjects
 		);
 
 		$queryResult = $this->myCustomFindAllRepositoryWithoutModelAnnotation->findAll();
 		$myObjects = $queryResult->toArray();
 		assertType(
-			'array<int, SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\QueryResultToArrayDynamicReturnTypeExtension\FrontendUserGroup>',
+			'list<QueryResultToArray\FrontendUserGroup>',
 			$myObjects
 		);
 
@@ -136,7 +136,7 @@ class MyController extends ActionController
 
 		$myObjects = $queryResult->toArray();
 		assertType(
-			'array<int, SaschaEgerer\PhpstanTypo3\Tests\Unit\Type\QueryResultToArrayDynamicReturnTypeExtension\FrontendUserGroup>',
+			'list<QueryResultToArray\FrontendUserGroup>',
 			$myObjects
 		);
 	}

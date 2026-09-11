@@ -10,6 +10,7 @@ use PHPStan\Reflection\ParametersAcceptor;
 use PHPStan\TrinaryLogic;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\Generic\TemplateTypeMap;
+use PHPStan\Type\IntegerType;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -84,7 +85,10 @@ class RepositoryFindByMethodReflection implements MethodReflection
 
 	public function getReturnType(): GenericObjectType
 	{
-		return new GenericObjectType(QueryResultInterface::class, [new ObjectType($this->modelReflection->getName())]);
+		return new GenericObjectType(
+			QueryResultInterface::class,
+			[new IntegerType(), new ObjectType($this->modelReflection->getName())]
+		);
 	}
 
 	/**

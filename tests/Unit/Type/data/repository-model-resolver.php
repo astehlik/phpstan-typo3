@@ -91,9 +91,9 @@ class AnswerRepository extends AnswerRepositoryVendor
 	{
 		$query = $this->createQuery();
 		assertType('TYPO3\CMS\Extbase\Persistence\QueryInterface<RepositoryModelResolver\Vendor\Domain\Model\Answer>', $query);
-		assertType('TYPO3\CMS\Extbase\Persistence\QueryResultInterface<RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->findAll());
+		assertType('TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->findAll());
 		assertType('RepositoryModelResolver\Vendor\Domain\Model\Answer|null', $this->findByUid(1));
-		assertType('TYPO3\CMS\Extbase\Persistence\QueryResultInterface<RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->findByField('a'));
+		assertType('TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->findByField('a'));
 		assertType('RepositoryModelResolver\Vendor\Domain\Model\Answer|null', $this->findOneByField('a'));
 		assertType('int', $this->countByField('a'));
 		assertType('*ERROR*', $this->findByNonexisting('a'));
@@ -149,7 +149,7 @@ class Consumer
 		assertType('TYPO3\CMS\Extbase\Persistence\QueryInterface<RepositoryModelResolver\Vendor\Domain\Model\Mail>', $this->mailByStringRepository->createQuery());
 		assertType('TYPO3\CMS\Extbase\Persistence\QueryInterface<RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->vendorAnswerRepository->createQuery());
 		assertType('TYPO3\CMS\Extbase\Persistence\QueryInterface<RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->siteAnswerRepository->createQuery());
-		assertType('TYPO3\CMS\Extbase\Persistence\QueryResultInterface<RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->siteAnswerRepository->findAll());
+		assertType('TYPO3\CMS\Extbase\Persistence\QueryResultInterface<int, RepositoryModelResolver\Vendor\Domain\Model\Answer>', $this->siteAnswerRepository->findAll());
 		assertType('RepositoryModelResolver\Vendor\Domain\Model\Answer|null', $this->siteAnswerRepository->findByUid(1));
 	}
 
